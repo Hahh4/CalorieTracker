@@ -1,0 +1,13 @@
+{
+  "name": "whatsapp-dify-calories-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp and Dify integration on Vercel",
+  "main": "api/webhook.js",
+  "dependencies": {
+    "axios": "^1.7.0",
+    "form-data": "^4.0.0"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
