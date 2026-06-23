@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
         }
     }
 
-    // ------------------ 2. Core Business Logic: Process Incoming Image Messages (POST) ------------------
+// ------------------ 2. Core Business Logic: Process Incoming Image Messages (POST) ------------------
     if (req.method === 'POST') {
         try {
             const entry = req.body?.entry?.[0];
@@ -40,28 +40,30 @@ module.exports = async (req, res) => {
             const message = changes?.value?.messages?.[0];
             const phoneNumberId = changes?.value?.metadata?.phone_number_id;
 
-            // If the incoming webhook is not an image message, acknowledge immediately and exit to prevent retries
+            // If the incoming webhook is not an image message, acknowledge immediately and exit
             if (!message || message.type !== 'image' || !phoneNumberId) {
                 return res.status(200).send('EVENT_RECEIVED');
             }
 
             const fromNumber = message.from; // User's WhatsApp phone number
             const imageId = message.image.id; // Image ID hosted on Meta's servers
-            console.log(`📸【Captured successfully】A photo has been received from ${fromNumber} The photo ID is:: ${imageId}`);
-            // Acknowledge Meta with a 200 OK immediately to prevent Vercel 504 timeouts during async processing
-            res.status(200).send('EVENT_RECEIVED');
 
-            // Push the workload into the background asynchronous pipeline
+            console.log(`📸【Captured successfully】A photo has been received from ${fromNumber}. Photo ID: ${imageId}`);
+
+            // Await the entire workflow to FINISH before letting Vercel close the connection!
+            // This prevents Vercel from killing the Serverless container prematurely.
             await handleWorkflow(imageId, fromNumber, phoneNumberId);
+
+            // Acknowledge Meta ONLY after the pipeline is completely finished
+            return res.status(200).send('EVENT_RECEIVED');
 
         } catch (error) {
             console.error('Webhook Error:', error.message);
             if (!res.writableEnded) {
-                res.status(200).send('EVENT_RECEIVED');
+                return res.status(200).send('EVENT_RECEIVED');
             }
         }
     }
-};
 
 // Asynchronous processing pipeline function
 async function handleWorkflow(metaImageId, toPhoneNumber, phoneNumberId) {
