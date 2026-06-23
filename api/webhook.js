@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
 
             const fromNumber = message.from; // User's WhatsApp phone number
             const imageId = message.image.id; // Image ID hosted on Meta's servers
-
+            console.log(`📸【Captured successfully】A photo has been received from ${fromNumber} The photo ID is:: ${imageId}`);
             // Acknowledge Meta with a 200 OK immediately to prevent Vercel 504 timeouts during async processing
             res.status(200).send('EVENT_RECEIVED');
 
