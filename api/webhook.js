@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
         }
     }
 
-// ------------------ 2. Core Business Logic: Process Incoming Image Messages (POST) ------------------
+    // ------------------ 2. Core Business Logic: Process Incoming Image Messages (POST) ------------------
     if (req.method === 'POST') {
         try {
             const entry = req.body?.entry?.[0];
@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
             const message = changes?.value?.messages?.[0];
             const phoneNumberId = changes?.value?.metadata?.phone_number_id;
 
-            // If the incoming webhook is not an image message, acknowledge immediately and exit
+            // If the incoming webhook is not an image message, acknowledge immediately and exit to prevent retries
             if (!message || message.type !== 'image' || !phoneNumberId) {
                 return res.status(200).send('EVENT_RECEIVED');
             }
@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
 
             console.log(`📸【Captured successfully】A photo has been received from ${fromNumber}. Photo ID: ${imageId}`);
 
-            // Await the entire workflow to FINISH before letting Vercel close the connection!
+            // 🔥 FIX: Await the entire workflow to FINISH before letting Vercel close the connection!
             // This prevents Vercel from killing the Serverless container prematurely.
             await handleWorkflow(imageId, fromNumber, phoneNumberId);
 
@@ -64,6 +64,7 @@ module.exports = async (req, res) => {
             }
         }
     }
+};
 
 // Asynchronous processing pipeline function
 async function handleWorkflow(metaImageId, toPhoneNumber, phoneNumberId) {
